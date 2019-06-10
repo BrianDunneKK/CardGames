@@ -133,7 +133,7 @@ class Sprite_Card(Sprite):
     def __init__(self, card, topleft, style=None):
         super().__init__(card.abbrev, style=merge_dicts(Sprite_Card.default_style, style))
         self.card = card
-        self.load_image(self.image_file, scale_to="style")
+        self.load_image_from_file(self.image_file, scale_to="style")
         self.rect.topleft = topleft
 
     @property
