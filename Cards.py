@@ -1,7 +1,6 @@
-import sys
 from random import shuffle
-sys.path.append("../pygame-cdkk")
-from cdkkPyGameApp import *
+import cdkk
+import pygame
 
 ### --------------------------------------------------
 
@@ -127,11 +126,11 @@ class CardSet:
 
 ### --------------------------------------------------
 
-class Sprite_Card(Sprite):
+class Sprite_Card(cdkk.Sprite):
     default_style = { "width":(691//4), "height":(1056//4) }
 
     def __init__(self, card, topleft, style=None):
-        super().__init__(card.abbrev, style=merge_dicts(Sprite_Card.default_style, style))
+        super().__init__(card.abbrev, style=cdkk.merge_dicts(Sprite_Card.default_style, style))
         self.card = card
         self.load_image_from_file(self.image_file, scale_to="style")
         self.rect.topleft = topleft
@@ -142,11 +141,11 @@ class Sprite_Card(Sprite):
             f = "joker"
         else:
             f = self.card.abbrev
-        return "Images\\"+f+".png"
+        return f+".png"
 
 # --------------------
 
-class Manager_Card(SpriteManager):
+class Manager_Card(cdkk.SpriteManager):
     def __init__(self, name = "Card Manager"):
         super().__init__(name)
         self.deck = CardSet()
@@ -161,7 +160,7 @@ class Manager_Card(SpriteManager):
 
 ### --------------------------------------------------
 
-class CardGameApp(PyGameApp):
+class CardGameApp(cdkk.PyGameApp):
     def init(self):
         super().init()
         self.add_sprite_mgr(Manager_Card())
@@ -172,7 +171,7 @@ class CardGameApp(PyGameApp):
 app_config = {
     "width":1200, "height":800,
     "background_fill":"burlywood",
-    "caption":"Card Game"
+    "caption":"Card Game",
+    "image_path": "CardGames\\Images\\"
     }
-theApp = CardGameApp(app_config)
-theApp.execute()
+CardGameApp(app_config).execute()
