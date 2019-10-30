@@ -2,14 +2,18 @@ from random import shuffle
 import cdkk
 import pygame
 
-### --------------------------------------------------
+# --------------------------------------------------
+
 
 class Card:
     _suit_names = ['Club', 'Diamond', 'Heart', 'Spade']
     _suit_abbrevs = ['C', 'D', 'H', 'S']
     _suit_symbols = [chr(0x2663), chr(0x2666), chr(0x2665), chr(0x2660)]
-    _value_names = ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King']
-    _value_abbrevs = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K']
+    _value_names = ['Ace', '2', '3', '4', '5', '6', '7',
+                    '8', '9', '10', 'Jack', 'Queen', 'King']
+    _value_abbrevs = ['A', '2', '3', '4', '5', '6', '7',
+                      '8', '9', 'T', 'J', 'Q', 'K']
+    _value_as_int = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
 
     @staticmethod
     def ListSuits():
@@ -29,7 +33,8 @@ class Card:
 
     @property
     def value(self):
-        return self._value
+        # return self._value
+        return Card._value_abbrevs[self._value]
 
     @property
     def suit(self):
@@ -54,7 +59,7 @@ class Card:
             s = Card._suit_abbrevs[self._suit]
             a = v + s
         return a
-    
+
     @property
     def symbol(self):
         if self._value == "joker":
@@ -69,20 +74,33 @@ class Card:
             sy = s+v
         return sy
 
-    def str(self, as_symbol=True):
+    def as_str(self, as_symbol=False):
         return self.symbol if as_symbol else self.abbrev
 
-### --------------------------------------------------
+    def as_int(self):
+        return Card._value_as_int[self._value]
+
+# --------------------------------------------------
+
 
 class CardSet:
-    def __init__(self, init_cards = []):
+    def __init__(self, init_cards=[], deck=False, shuffle=False):
         if (len(init_cards) == 0):
             self._cards = []
         else:
             self._cards = init_cards
+        if deck:
+            self.deck(False)
+        if shuffle:
+            self.shuffle()
 
     def add(self, card):
-        return self._cards.append(card)
+        if type(card) is CardSet:
+            for c in card.cards:
+                self.add(c)
+            return self.cards
+        else:
+            return self._cards.append(card)
 
     @property
     def count(self):
@@ -95,11 +113,18 @@ class CardSet:
     def __iter__(self):
         return iter(self._cards)
 
-    def str(self, as_symbol=True):
+    def as_str(self, as_symbol=False):
         s = ""
         for c in self._cards:
-            s = s + c.str(as_symbol) + " "
+            s = s + c.as_str(as_symbol) + " "
         return s
+
+    def as_int(self):
+        v = 0
+        for c in self._cards:
+            cv = c.as_int()
+            v = v + c.as_int()
+        return v
 
     def clear(self):
         self._cards = []
@@ -118,16 +143,37 @@ class CardSet:
         self._cards = self._cards[1:]
         return card_dealt
 
-    def deck(self):
+    def deck(self, shuffle=False):
         self.clear()
         for s in Card.ListSuits():
             for v in Card.ListValues():
                 self.add(Card(v, s))
+        if shuffle:
+            self.shuffle()
 
-### --------------------------------------------------
+# --------------------------------------------------
+
+
+class CardSet_TwentyOne(CardSet):
+    def as_int(self):
+        v = super().as_int()
+        for c in self._cards:
+            if c.value == "A" and v < 12:
+                v += 10
+        return v
+
+    def as_int21(self):
+        v = self.as_int()
+        aces = 0
+        for c in self._cards:
+            if c.value == "A":
+                aces += 1
+        return (v, aces)
+
+# --------------------------------------------------
 
 class Sprite_Card(cdkk.Sprite):
-    default_style = { "width":(691//4), "height":(1056//4) }
+    default_style = {"width": (691//4), "height": (1056//4)}
 
     def __init__(self, card, topleft, style=None):
         super().__init__(card.abbrev, style=cdkk.merge_dicts(Sprite_Card.default_style, style))
@@ -144,34 +190,3 @@ class Sprite_Card(cdkk.Sprite):
         return f+".png"
 
 # --------------------
-
-class Manager_Card(cdkk.SpriteManager):
-    def __init__(self, name = "Card Manager"):
-        super().__init__(name)
-        self.deck = CardSet()
-        self.deck.deck()
-        self.deck.shuffle()
-
-        self.hand = self.deck.deal(52)
-        i = 0
-        for c in self.hand:
-            self.add(Sprite_Card(c, (20+(i%13)*50, 20+(i//13)*100)))
-            i = i + 1
-
-### --------------------------------------------------
-
-class CardGameApp(cdkk.PyGameApp):
-    def init(self):
-        super().init()
-        self.add_sprite_mgr(Manager_Card())
-        self.event_mgr.keyboard_event(pygame.K_q, "Quit")
-
-### --------------------------------------------------
-
-app_config = {
-    "width":1200, "height":800,
-    "background_fill":"burlywood",
-    "caption":"Card Game",
-    "image_path": "CardGames\\Images\\"
-    }
-CardGameApp(app_config).execute()
