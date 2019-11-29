@@ -2,6 +2,12 @@ from random import shuffle
 import cdkk
 import pygame
 
+
+app_styles = {
+    "Card": {"width": (691//4), "height": (1056//4)}
+}
+cdkk.stylesheet.add_stylesheet(app_styles)
+
 # --------------------------------------------------
 
 
@@ -173,10 +179,8 @@ class CardSet_TwentyOne(CardSet):
 # --------------------------------------------------
 
 class Sprite_Card(cdkk.Sprite):
-    default_style = {"width": (691//4), "height": (1056//4)}
-
     def __init__(self, card, topleft, style=None):
-        super().__init__(card.abbrev, style=cdkk.merge_dicts(Sprite_Card.default_style, style))
+        super().__init__(card.abbrev, style=cdkk.merge_dicts(cdkk.stylesheet.style("Card"), style))
         self.card = card
         self.load_image_from_file(self.image_file, scale_to="style")
         self.rect.topleft = topleft
